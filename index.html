@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>照片探索</title>
+    <title>ALBUM</title>
+    <script name="TouchFree_Tooling" type="text/javascript" src="TouchFree_Tooling.js"></script>
     <style>
         * {
             margin: 0;
@@ -281,14 +282,14 @@
 
     <script>
         const photos = [
-            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80',
-            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80',
-            'https://images.unsplash.com/photo-1418065460487-3956ef138977?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2070&q=80',
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=2074&q=80',
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2071&q=80',
+            'https://images.unsplash.com/photo-1418065460487-3956ef138977?auto=format&fit=crop&w=2070&q=80',
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=2070&q=80'
         ];
         
-        let currentPhotoIndex = 1; // 从第二张照片开始（索引1）
+        let currentPhotoIndex = 1; // 从第二张照片开始
         const totalPhotos = photos.length;
         
         // 显示浏览界面
@@ -313,28 +314,46 @@
             const prevIndex = (currentPhotoIndex - 1 + totalPhotos) % totalPhotos;
             const nextIndex = (currentPhotoIndex + 1) % totalPhotos;
             
-            // 创建左侧照片（如果存在）
-            if (currentPhotoIndex > 0) {
+            // 左侧照片
+            if (totalPhotos > 1) {
                 const leftPhoto = document.createElement('div');
                 leftPhoto.className = 'photo side-photo left';
                 leftPhoto.style.backgroundImage = `url('${photos[prevIndex]}')`;
-                leftPhoto.onclick = () => previousPhoto();
                 photoDisplay.appendChild(leftPhoto);
+
+                let leftTimer;
+                leftPhoto.addEventListener('mouseenter', () => {
+                    leftTimer = setTimeout(() => {
+                        previousPhoto();
+                    }, 2000);
+                });
+                leftPhoto.addEventListener('mouseleave', () => {
+                    clearTimeout(leftTimer);
+                });
             }
             
-            // 创建主照片（中间）
+            // 主照片
             const mainPhoto = document.createElement('div');
             mainPhoto.className = 'photo main-photo';
             mainPhoto.style.backgroundImage = `url('${photos[currentPhotoIndex]}')`;
             photoDisplay.appendChild(mainPhoto);
             
-            // 创建右侧照片（如果存在）
-            if (currentPhotoIndex < totalPhotos - 1) {
+            // 右侧照片
+            if (totalPhotos > 1) {
                 const rightPhoto = document.createElement('div');
                 rightPhoto.className = 'photo side-photo right';
                 rightPhoto.style.backgroundImage = `url('${photos[nextIndex]}')`;
-                rightPhoto.onclick = () => nextPhoto();
                 photoDisplay.appendChild(rightPhoto);
+
+                let rightTimer;
+                rightPhoto.addEventListener('mouseenter', () => {
+                    rightTimer = setTimeout(() => {
+                        nextPhoto();
+                    }, 2000);
+                });
+                rightPhoto.addEventListener('mouseleave', () => {
+                    clearTimeout(rightTimer);
+                });
             }
             
             // 更新按钮状态
