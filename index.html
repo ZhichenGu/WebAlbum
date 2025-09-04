@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片探索</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        /* 开始界面 */
+        .start-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background: white;
+            position: relative;
+        }
+        
+        .explore-button {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            letter-spacing: 2px;
+        }
+        
+        .explore-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #764ba2 0%, #667eea 100%);
+        }
+        
+        /* 浏览界面 */
+        .browse-screen {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            background: #f5f5f5;
+        }
+        
+        .home-icon {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            width: 65px;
+            height: 65px;
+            background: #fff;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .home-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .home-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: #666;
+        }
+        
+        .photo-container {
+            display: flex;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .photo-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 70vh;
+            position: relative;
+        }
+        
+        .photo {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            transition: all 0.5s ease;
+            position: absolute;
+        }
+        
+        /* 主照片 - 中间显示 */
+        .main-photo {
+            width: 60vw;
+            height: 65vh;
+            z-index: 3;
+            opacity: 1;
+        }
+        
+        /* 侧边照片 - 左右两侧部分显示 */
+        .side-photo {
+            width: 25vw;
+            height: 50vh;
+            opacity: 0.7;
+            z-index: 1;
+        }
+        
+        .side-photo.left {
+            left: 5vw;
+            transform: translateX(-50%);
+        }
+        
+        .side-photo.right {
+            right: 5vw;
+            transform: translateX(50%);
+        }
+        
+        .side-photo:hover {
+            opacity: 0.9;
+            transform: translateX(-45%) scale(1.05);
+        }
+        
+        .side-photo.right:hover {
+            transform: translateX(45%) scale(1.05);
+        }
+        
+        .navigation {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+        
+        .nav-button {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .nav-button:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .nav-button svg {
+            width: 24px;
+            height: 24px;
+            fill: #333;
+        }
+        
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .explore-button {
+                padding: 15px 40px;
+                font-size: 20px;
+            }
+            
+            .home-icon {
+                top: 20px;
+                left: 20px;
+                width: 40px;
+                height: 40px;
+            }
+            
+            .main-photo {
+                width: 70vw;
+                height: 55vh;
+            }
+            
+            .side-photo {
+                width: 20vw;
+                height: 40vh;
+            }
+            
+            .side-photo.left {
+                left: 2vw;
+                transform: translateX(-40%);
+            }
+            
+            .side-photo.right {
+                right: 2vw;
+                transform: translateX(40%);
+            }
+            
+            .nav-button {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .navigation {
+                bottom: 30px;
+            }
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+        
+        .visible {
+            display: flex !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 开始界面 -->
+    <div class="start-screen" id="startScreen">
+        <button class="explore-button" onclick="showBrowseScreen()">探索照片</button>
+    </div>
+    
+    <!-- 浏览界面 -->
+    <div class="browse-screen" id="browseScreen">
+        <div class="home-icon" onclick="showStartScreen()">
+            <svg viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+        </div>
+        
+        <div class="photo-container">
+            <div class="photo-display" id="photoDisplay">
+                <!-- 照片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" id="prevButton" onclick="previousPhoto()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                </svg>
+            </button>
+            <button class="nav-button" id="nextButton" onclick="nextPhoto()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const photos = [
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80',
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80',
+            'https://images.unsplash.com/photo-1418065460487-3956ef138977?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'
+        ];
+        
+        let currentPhotoIndex = 1; // 从第二张照片开始（索引1）
+        const totalPhotos = photos.length;
+        
+        // 显示浏览界面
+        function showBrowseScreen() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('browseScreen').style.display = 'block';
+            updatePhotoDisplay();
+        }
+        
+        // 显示开始界面
+        function showStartScreen() {
+            document.getElementById('startScreen').style.display = 'flex';
+            document.getElementById('browseScreen').style.display = 'none';
+        }
+        
+        // 更新照片显示
+        function updatePhotoDisplay() {
+            const photoDisplay = document.getElementById('photoDisplay');
+            photoDisplay.innerHTML = ''; // 清空现有内容
+            
+            // 计算要显示的照片索引
+            const prevIndex = (currentPhotoIndex - 1 + totalPhotos) % totalPhotos;
+            const nextIndex = (currentPhotoIndex + 1) % totalPhotos;
+            
+            // 创建左侧照片（如果存在）
+            if (currentPhotoIndex > 0) {
+                const leftPhoto = document.createElement('div');
+                leftPhoto.className = 'photo side-photo left';
+                leftPhoto.style.backgroundImage = `url('${photos[prevIndex]}')`;
+                leftPhoto.onclick = () => previousPhoto();
+                photoDisplay.appendChild(leftPhoto);
+            }
+            
+            // 创建主照片（中间）
+            const mainPhoto = document.createElement('div');
+            mainPhoto.className = 'photo main-photo';
+            mainPhoto.style.backgroundImage = `url('${photos[currentPhotoIndex]}')`;
+            photoDisplay.appendChild(mainPhoto);
+            
+            // 创建右侧照片（如果存在）
+            if (currentPhotoIndex < totalPhotos - 1) {
+                const rightPhoto = document.createElement('div');
+                rightPhoto.className = 'photo side-photo right';
+                rightPhoto.style.backgroundImage = `url('${photos[nextIndex]}')`;
+                rightPhoto.onclick = () => nextPhoto();
+                photoDisplay.appendChild(rightPhoto);
+            }
+            
+            // 更新按钮状态
+            document.getElementById('prevButton').disabled = currentPhotoIndex === 0;
+            document.getElementById('nextButton').disabled = currentPhotoIndex === totalPhotos - 1;
+        }
+        
+        // 上一张照片
+        function previousPhoto() {
+            if (currentPhotoIndex > 0) {
+                currentPhotoIndex--;
+                updatePhotoDisplay();
+            }
+        }
+        
+        // 下一张照片
+        function nextPhoto() {
+            if (currentPhotoIndex < totalPhotos - 1) {
+                currentPhotoIndex++;
+                updatePhotoDisplay();
+            }
+        }
+        
+        // 键盘导航
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('browseScreen').style.display === 'block') {
+                if (e.key === 'ArrowLeft') {
+                    previousPhoto();
+                } else if (e.key === 'ArrowRight') {
+                    nextPhoto();
+                } else if (e.key === 'Escape') {
+                    showStartScreen();
+                }
+            }
+        });
+        
+        // 触摸滑动支持（移动设备）
+        let startX = 0;
+        let endX = 0;
+        
+        document.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+        });
+        
+        document.addEventListener('touchend', function(e) {
+            endX = e.changedTouches[0].clientX;
+            if (Math.abs(endX - startX) > 50) {
+                if (endX > startX) {
+                    previousPhoto();
+                } else {
+                    nextPhoto();
+                }
+            }
+        });
+        
+        // 窗口调整大小时重新计算位置
+        window.addEventListener('resize', function() {
+            updatePhotoDisplay();
+        });
+        
+        // 初始化
+        updatePhotoDisplay();
+    </script>
+</body>
+</html>
