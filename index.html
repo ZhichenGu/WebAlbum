@@ -305,61 +305,57 @@
             document.getElementById('browseScreen').style.display = 'none';
         }
         
-        // 更新照片显示
-        function updatePhotoDisplay() {
+                // 更新照片显示
+        function updatePhotoDisplay(direction = 0) {
             const photoDisplay = document.getElementById('photoDisplay');
-            photoDisplay.innerHTML = ''; // 清空现有内容
-            
-            // 计算要显示的照片索引
+            photoDisplay.innerHTML = '';
+
             const prevIndex = (currentPhotoIndex - 1 + totalPhotos) % totalPhotos;
             const nextIndex = (currentPhotoIndex + 1) % totalPhotos;
-            
-            // 左侧照片
-            if (totalPhotos > 1) {
-                const leftPhoto = document.createElement('div');
-                leftPhoto.className = 'photo side-photo left';
-                leftPhoto.style.backgroundImage = `url('${photos[prevIndex]}')`;
-                photoDisplay.appendChild(leftPhoto);
 
-                let leftTimer;
-                leftPhoto.addEventListener('mouseenter', () => {
-                    leftTimer = setTimeout(() => {
-                        previousPhoto();
-                    }, 2000);
-                });
-                leftPhoto.addEventListener('mouseleave', () => {
-                    clearTimeout(leftTimer);
-                });
-            }
-            
+            // 左侧照片
+            const leftPhoto = document.createElement('div');
+            leftPhoto.className = 'photo side-photo left';
+            leftPhoto.style.backgroundImage = `url('${photos[prevIndex]}')`;
+            leftPhoto.style.transform = direction === -1 ? 'translateX(0)' : 'translateX(-50%)';
+            photoDisplay.appendChild(leftPhoto);
+            // 点击左侧照片切换
+            leftPhoto.addEventListener('click', previousPhoto);
+
             // 主照片
             const mainPhoto = document.createElement('div');
             mainPhoto.className = 'photo main-photo';
             mainPhoto.style.backgroundImage = `url('${photos[currentPhotoIndex]}')`;
+            mainPhoto.style.transform = 'translateX(0)';
             photoDisplay.appendChild(mainPhoto);
-            
-            // 右侧照片
-            if (totalPhotos > 1) {
-                const rightPhoto = document.createElement('div');
-                rightPhoto.className = 'photo side-photo right';
-                rightPhoto.style.backgroundImage = `url('${photos[nextIndex]}')`;
-                photoDisplay.appendChild(rightPhoto);
 
-                let rightTimer;
-                rightPhoto.addEventListener('mouseenter', () => {
-                    rightTimer = setTimeout(() => {
-                        nextPhoto();
-                    }, 2000);
-                });
-                rightPhoto.addEventListener('mouseleave', () => {
-                    clearTimeout(rightTimer);
-                });
-            }
-            
-            // 更新按钮状态
+            // 右侧照片
+            const rightPhoto = document.createElement('div');
+            rightPhoto.className = 'photo side-photo right';
+            rightPhoto.style.backgroundImage = `url('${photos[nextIndex]}')`;
+            rightPhoto.style.transform = direction === 1 ? 'translateX(0)' : 'translateX(50%)';
+            photoDisplay.appendChild(rightPhoto);
+            // 点击右侧照片切换
+            rightPhoto.addEventListener('click', nextPhoto);
+
+            // 鼠标悬停自动切换
+            let leftTimer, rightTimer;
+            leftPhoto.addEventListener('mouseenter', () => { leftTimer = setTimeout(previousPhoto, 3500); });
+            leftPhoto.addEventListener('mouseleave', () => { clearTimeout(leftTimer); });
+            rightPhoto.addEventListener('mouseenter', () => { rightTimer = setTimeout(nextPhoto, 3500); });
+            rightPhoto.addEventListener('mouseleave', () => { clearTimeout(rightTimer); });
+
+            // 动画
+            requestAnimationFrame(() => {
+                if (direction === 1) { mainPhoto.style.transform = 'translateX(-100%)'; rightPhoto.style.transform = 'translateX(0)'; }
+                if (direction === -1) { mainPhoto.style.transform = 'translateX(100%)'; leftPhoto.style.transform = 'translateX(0)'; }
+            });
+
+            // 按钮状态
             document.getElementById('prevButton').disabled = currentPhotoIndex === 0;
             document.getElementById('nextButton').disabled = currentPhotoIndex === totalPhotos - 1;
         }
+
         
         // 上一张照片
         function previousPhoto() {
