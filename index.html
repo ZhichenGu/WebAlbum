@@ -1,417 +1,1531 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALBUM</title>
-    <script name="TouchFree_Tooling" type="text/javascript" src="TouchFree_Tooling.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: white;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-        }
-        
-        /* 开始界面 */
-        .start-screen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            width: 100vw;
-            background: white;
-            position: relative;
-        }
-        
-        .explore-button {
-            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 20px 60px;
-            font-size: 24px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            letter-spacing: 2px;
-        }
-        
-        .explore-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            background: linear-gradient(45deg, #764ba2 0%, #667eea 100%);
-        }
-        
-        /* 浏览界面 */
-        .browse-screen {
-            display: none;
-            height: 100vh;
-            width: 100vw;
-            position: relative;
-            background: #f5f5f5;
-        }
-        
-        .home-icon {
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            width: 65px;
-            height: 65px;
-            background: #fff;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-        
-        .home-icon:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-        
-        .home-icon svg {
-            width: 40px;
-            height: 40px;
-            fill: #666;
-        }
-        
-        .photo-container {
-            display: flex;
-            height: 100vh;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .photo-display {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 70vh;
-            position: relative;
-        }
-        
-        .photo {
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            border-radius: 15px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-            transition: all 0.5s ease;
-            position: absolute;
-        }
-        
-        /* 主照片 - 中间显示 */
-        .main-photo {
-            width: 60vw;
-            height: 65vh;
-            z-index: 3;
-            opacity: 1;
-        }
-        
-        /* 侧边照片 - 左右两侧部分显示 */
-        .side-photo {
-            width: 25vw;
-            height: 50vh;
-            opacity: 0.7;
-            z-index: 1;
-        }
-        
-        .side-photo.left {
-            left: 5vw;
-            transform: translateX(-50%);
-        }
-        
-        .side-photo.right {
-            right: 5vw;
-            transform: translateX(50%);
-        }
-        
-        .side-photo:hover {
-            opacity: 0.9;
-            transform: translateX(-45%) scale(1.05);
-        }
-        
-        .side-photo.right:hover {
-            transform: translateX(45%) scale(1.05);
-        }
-        
-        .navigation {
-            position: absolute;
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 100;
-        }
-        
-        .nav-button {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
-        .nav-button:hover {
-            background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
-        
-        .nav-button svg {
-            width: 24px;
-            height: 24px;
-            fill: #333;
-        }
-        
-        .nav-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .explore-button {
-                padding: 15px 40px;
-                font-size: 20px;
-            }
-            
-            .home-icon {
-                top: 20px;
-                left: 20px;
-                width: 40px;
-                height: 40px;
-            }
-            
-            .main-photo {
-                width: 70vw;
-                height: 55vh;
-            }
-            
-            .side-photo {
-                width: 20vw;
-                height: 40vh;
-            }
-            
-            .side-photo.left {
-                left: 2vw;
-                transform: translateX(-40%);
-            }
-            
-            .side-photo.right {
-                right: 2vw;
-                transform: translateX(40%);
-            }
-            
-            .nav-button {
-                width: 40px;
-                height: 40px;
-            }
-            
-            .navigation {
-                bottom: 30px;
-            }
-        }
-        
-        /* 隐藏类 */
-        .hidden {
-            display: none !important;
-        }
-        
-        .visible {
-            display: flex !important;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leap Motion 互动相册</title>
+<script src="TouchFree_Tooling.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        background: #000;
+        color: #fff;
+        user-select: none;
+    }
+    
+    /* ===== 粒子画布 ===== */
+    #particleCanvas {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        z-index: 0;
+        pointer-events: none;
+    }
+    
+    /* ===== 开始界面 ===== */
+    .start-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        position: relative;
+        z-index: 10;
+        gap: 30px;
+    }
+    
+    .start-screen .title {
+        font-size: 72px;
+        font-weight: 200;
+        letter-spacing: 16px;
+        background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399, #a78bfa);
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 6s ease infinite;
+        margin-bottom: 10px;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .start-screen .subtitle {
+        font-size: 20px;
+        color: rgba(255,255,255,0.5);
+        letter-spacing: 6px;
+        margin-bottom: 50px;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 40px;
+        align-items: center;
+    }
+    
+    .explore-button, .upload-button {
+        padding: 24px 80px;
+        font-size: 24px;
+        font-weight: 500;
+        border-radius: 60px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        letter-spacing: 6px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .explore-button {
+        background: linear-gradient(135deg, rgba(167, 139, 250, 0.9), rgba(96, 165, 250, 0.9));
+        color: white;
+        box-shadow: 0 8px 32px rgba(167, 139, 250, 0.4);
+    }
+    
+    .upload-button {
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.85);
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    
+    .explore-button:hover, .upload-button:hover {
+        transform: translateY(-4px) scale(1.05);
+    }
+    
+    .explore-button:hover {
+        box-shadow: 0 12px 48px rgba(167, 139, 250, 0.6);
+    }
+    
+    .upload-button:hover {
+        background: rgba(255,255,255,0.15);
+        border-color: rgba(255,255,255,0.35);
+        box-shadow: 0 12px 48px rgba(255,255,255,0.15);
+    }
+    
+    /* ===== 上传弹窗 ===== */
+    .upload-modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.9);
+        backdrop-filter: blur(30px);
+        z-index: 200;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        overflow-y: auto;
+        padding: 60px 20px;
+    }
+    
+    .upload-modal.active { display: flex; }
+    
+    .upload-area {
+        width: 600px;
+        height: 280px;
+        border: 2px dashed rgba(255,255,255,0.2);
+        border-radius: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .upload-area:hover, .upload-area.dragover {
+        border-color: rgba(167, 139, 250, 0.6);
+        background: rgba(167, 139, 250, 0.05);
+    }
+    
+    .upload-area svg {
+        width: 64px; height: 64px;
+        fill: rgba(255,255,255,0.4);
+    }
+    
+    .upload-area p {
+        color: rgba(255,255,255,0.6);
+        font-size: 18px;
+    }
+    
+    .upload-area .hint {
+        font-size: 14px;
+        color: rgba(255,255,255,0.3);
+    }
+    
+    .upload-modal .close-btn {
+        width: 56px; height: 56px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s ease;
+        margin-top: 40px;
+        flex-shrink: 0;
+    }
+    
+    .upload-modal .close-btn:hover {
+        background: rgba(255,255,255,0.2);
+        transform: scale(1.1);
+    }
+    
+    .file-input { display: none; }
+    
+    .media-preview-grid {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 80vw;
+    }
+    
+    .media-preview-item {
+        width: 120px; height: 120px;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .media-preview-item img,
+    .media-preview-item video {
+        width: 100%; height: 100%;
+        object-fit: cover;
+    }
+    
+    .media-preview-item .remove-btn {
+        position: absolute;
+        bottom: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 32px; height: 32px;
+        background: rgba(239, 68, 68, 0.55);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        font-size: 18px;
+        color: white;
+        opacity: 0.7;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 12px rgba(239, 68, 68, 0.2);
+        z-index: 10;
+    }
+    
+    /* ===== 浏览界面 ===== */
+    .browse-screen {
+        display: none;
+        height: 100vh;
+        width: 100vw;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .browse-screen.active { display: block; }
+    
+    /* 主页按钮 - 移到底部工具栏 */
+    .home-icon {
+        width: 50px; height: 50px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        border: 1px solid rgba(255,255,255,0.15);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        flex-shrink: 0;
+    }
+    
+    .home-icon:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+    }
+    
+    .home-icon svg {
+        width: 24px; height: 24px;
+        fill: rgba(255,255,255,0.8);
+    }
+    
+    /* 照片容器 */
+    .photo-container {
+        display: flex;
+        height: 100vh;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .photo-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 80vh;
+        position: relative;
+        perspective: 1200px;
+    }
+    
+    .photo-slot {
+        position: absolute;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #1a1a1a;
+        will-change: transform, opacity, filter;
+    }
+    
+    .photo-slot img,
+    .photo-slot video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        pointer-events: none;
+    }
+    
+    /* 位置定义 */
+    .pos-main {
+        width: 55vw;
+        height: 65vh;
+        z-index: 10;
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+    
+    .pos-left {
+        width: 22vw;
+        height: 45vh;
+        z-index: 5;
+        opacity: 0.5;
+        transform: translateX(-38vw) scale(0.85) rotateY(8deg);
+        filter: blur(2px);
+    }
+    
+    .pos-right {
+        width: 22vw;
+        height: 45vh;
+        z-index: 5;
+        opacity: 0.5;
+        transform: translateX(38vw) scale(0.85) rotateY(-8deg);
+        filter: blur(2px);
+    }
+    
+    .pos-far-left {
+        width: 15vw;
+        height: 30vh;
+        z-index: 2;
+        opacity: 0.2;
+        transform: translateX(-55vw) scale(0.7) rotateY(15deg);
+        filter: blur(4px);
+    }
+    
+    .pos-far-right {
+        width: 15vw;
+        height: 30vh;
+        z-index: 2;
+        opacity: 0.2;
+        transform: translateX(55vw) scale(0.7) rotateY(-15deg);
+        filter: blur(4px);
+    }
+    
+    .pos-hidden {
+        opacity: 0;
+        transform: scale(0.5);
+        z-index: 0;
+    }
+    
+    /* 导航指示器 - 居中放大 */
+    .nav-indicator {
+        position: absolute;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 50;
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+    
+    .nav-indicator.left { left: 8vw; top: 50%; transform: translateY(-50%); }
+    .nav-indicator.right { right: 8vw; top: 50%; transform: translateY(-50%); }
+    
+    .nav-indicator svg.arrow-icon {
+        width: 44px; height: 44px;
+        fill: rgba(255,255,255,0.5);
+    }
+    
+    .progress-ring {
+        position: absolute;
+        width: 100%; height: 100%;
+    }
+    
+    .progress-ring circle {
+        fill: none;
+        stroke-width: 3;
+        stroke-linecap: round;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+    
+    .progress-ring .bg { stroke: rgba(255,255,255,0.1); }
+    .progress-ring .fill { stroke: #a78bfa; stroke-dasharray: 251; stroke-dashoffset: 251; transition: none; }
+    
+    /* 交互区域指示器 - 画面中下 1.5m×1.5m 区域 */
+    .interaction-zone {
+        position: absolute;
+        bottom: 5vh;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 75vw;          /* ~1440px on 1080p = 1.5m on 2m wide projection */
+        height: 50vh;          /* ~540px on 1080p = 1.5m on 3m tall projection */
+        border: 1px dashed rgba(167, 139, 250, 0.08);
+        border-radius: 24px;
+        pointer-events: none;
+        z-index: 30;
+        display: none;
+    }
+    
+    .interaction-zone.active { display: block; }
+    
+    .interaction-zone .zone-label {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 11px;
+        color: rgba(167, 139, 250, 0.2);
+        letter-spacing: 3px;
+    }
+    
+    /* 左右悬停区域 - 居中靠近交互区 */
+    .hover-zone {
+        position: absolute;
+        top: 25%;
+        width: 18vw;
+        height: 50%;
+        z-index: 20;
+        cursor: pointer;
+        border-radius: 20px;
+    }
+    
+    .hover-zone.left { left: 2vw; }
+    .hover-zone.right { right: 2vw; }
+    
+    /* 底部工具栏 - 统合所有控制 */
+    .info-bar {
+        position: absolute;
+        bottom: 5vh;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 20px;
+        padding: 12px 28px;
+    }
+    
+    .info-bar .counter {
+        font-size: 15px;
+        color: rgba(255,255,255,0.5);
+        letter-spacing: 2px;
+        min-width: 50px;
+        text-align: center;
+    }
+    
+    .info-bar .dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.15);
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+    
+    .info-bar .dot.active {
+        background: #a78bfa;
+        box-shadow: 0 0 8px rgba(167, 139, 250, 0.5);
+        transform: scale(1.4);
+    }
+    
+    /* 底部工具栏中的导航按钮 */
+    .toolbar-nav-btn {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+        font-size: 20px;
+    }
+    
+    .toolbar-nav-btn:hover {
+        background: rgba(167, 139, 250, 0.2);
+        border-color: rgba(167, 139, 250, 0.4);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .toolbar-nav-btn svg {
+        width: 22px; height: 22px;
+        fill: currentColor;
+    }
+    
+    /* ===== 教程/屏保界面 ===== */
+    .tutorial-screen {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 40px;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(30px);
+    }
+    
+    .tutorial-screen.active { display: flex; }
+    
+    .tutorial-screen h2 {
+        font-size: 52px;
+        font-weight: 300;
+        letter-spacing: 8px;
+        background: linear-gradient(90deg, #a78bfa, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 20px;
+    }
+    
+    .gesture-grid {
+        display: flex;
+        gap: 60px;
+        align-items: center;
+    }
+    
+    .gesture-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .gesture-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    .gesture-item:nth-child(2) .gesture-icon { animation-delay: 0.5s; }
+    .gesture-item:nth-child(3) .gesture-icon { animation-delay: 1s; }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .gesture-icon svg {
+        width: 60px; height: 60px;
+        fill: none;
+        stroke: rgba(255,255,255,0.8);
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    
+    .gesture-label {
+        font-size: 16px;
+        color: rgba(255,255,255,0.6);
+        letter-spacing: 2px;
+    }
+    
+    .gesture-desc {
+        font-size: 14px;
+        color: rgba(255,255,255,0.4);
+        max-width: 150px;
+        text-align: center;
+        line-height: 1.6;
+    }
+    
+    .tutorial-screen .resume-hint {
+        position: absolute;
+        bottom: 60px;
+        font-size: 14px;
+        color: rgba(255,255,255,0.3);
+        letter-spacing: 2px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.8; }
+    }
+    
+    /* 倒计时条 */
+    .idle-bar {
+        position: fixed;
+        top: 0; left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #a78bfa, #60a5fa);
+        z-index: 200;
+        transition: width 0.1s linear;
+        width: 0%;
+    }
+    
+    /* 手势光标 */
+    .cursor-dot {
+        position: fixed;
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        background: rgba(167, 139, 250, 0.8);
+        box-shadow: 0 0 20px rgba(167, 139, 250, 0.5), 0 0 40px rgba(167, 139, 250, 0.3);
+        pointer-events: none;
+        z-index: 1000;
+        transition: transform 0.1s ease-out;
+        display: none;
+    }
+    
+    .cursor-dot.active { display: block; }
+    
+    .cursor-ring {
+        position: fixed;
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        border: 2px solid rgba(167, 139, 250, 0.4);
+        pointer-events: none;
+        z-index: 1000;
+        transition: transform 0.2s ease-out, width 0.2s, height 0.2s;
+        display: none;
+    }
+    
+    .cursor-ring.active { display: block; }
+    
+    .cursor-ring.dwell-active {
+        width: 60px; height: 60px;
+        border-color: rgba(167, 139, 250, 0.8);
+    }
+    
+    /* 全屏查看器 */
+    .fullscreen-viewer {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        z-index: 300;
+        background: rgba(0,0,0,0.95);
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .fullscreen-viewer.active { display: flex; }
+    
+    .fullscreen-viewer img,
+    .fullscreen-viewer video {
+        max-width: 90vw;
+        max-height: 90vh;
+        object-fit: contain;
+        border-radius: 12px;
+    }
+    
+    .fullscreen-viewer .close-fs {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 56px; height: 56px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s ease;
+        z-index: 310;
+    }
+    
+    .fullscreen-viewer .close-fs:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateX(-50%) scale(1.1);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+        .start-screen .title { font-size: 40px; }
+        .button-group { flex-direction: column; gap: 20px; }
+        .explore-button, .upload-button { padding: 18px 50px; font-size: 18px; }
+        .pos-main { width: 70vw; height: 50vh; }
+        .pos-left, .pos-right { width: 20vw; height: 35vh; }
+        .gesture-grid { flex-direction: column; gap: 30px; }
+        .upload-area { width: 90vw; }
+        .interaction-zone { width: 80vw; height: 45vh; }
+        .info-bar { gap: 10px; padding: 10px 18px; }
+        .hover-zone { width: 22vw; height: 40%; top: 30%; }
+    }
+</style>
 </head>
 <body>
-    <!-- 开始界面 -->
-    <div class="start-screen" id="startScreen">
-        <button class="explore-button" onclick="showBrowseScreen()">探索照片</button>
+
+<!-- 粒子画布 -->
+<canvas id="particleCanvas"></canvas>
+
+<!-- 空闲倒计时条 -->
+<div class="idle-bar" id="idleBar"></div>
+
+<!-- 手势光标 -->
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- 开始界面 -->
+<div class="start-screen" id="startScreen">
+    <div class="title">互动相册</div>
+    <div class="subtitle">Leap Motion 3D 手势控制</div>
+    <div class="button-group">
+        <button class="explore-button" id="exploreBtn" data-action="explore">
+            <span>探索照片</span>
+        </button>
+        <button class="upload-button" id="uploadBtn" data-action="upload">
+            <span>上传内容</span>
+        </button>
     </div>
-    
-    <!-- 浏览界面 -->
-    <div class="browse-screen" id="browseScreen">
-        <div class="home-icon" onclick="showStartScreen()">
-            <svg viewBox="0 0 24 24">
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+</div>
+
+<!-- 上传弹窗 -->
+<div class="upload-modal" id="uploadModal">
+    <button class="close-btn" id="closeUpload">&times;</button>
+    <div class="upload-area" id="uploadArea">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        <p>拖拽文件到这里 或 点击选择</p>
+        <p class="hint">支持 JPG, PNG, GIF, MP4, WEBM 格式</p>
+    </div>
+    <input type="file" class="file-input" id="fileInput" multiple accept="image/*,video/*">
+    <div class="media-preview-grid" id="mediaPreviewGrid"></div>
+</div>
+
+<!-- 浏览界面 -->
+<div class="browse-screen" id="browseScreen">
+    <div class="photo-container">
+        <div class="photo-display" id="photoDisplay">
+            <!-- 5个固定位置的照片槽 -->
+            <div class="photo-slot pos-hidden" id="slot0"></div>
+            <div class="photo-slot pos-hidden" id="slot1"></div>
+            <div class="photo-slot pos-hidden" id="slot2"></div>
+            <div class="photo-slot pos-hidden" id="slot3"></div>
+            <div class="photo-slot pos-hidden" id="slot4"></div>
+        </div>
+        
+        <!-- 左右悬停区域 -->
+        <div class="hover-zone left" id="hoverLeft" data-action="prev"></div>
+        <div class="hover-zone right" id="hoverRight" data-action="next"></div>
+        
+        <!-- 导航指示器 -->
+        <div class="nav-indicator left" id="navLeft">
+            <svg class="arrow-icon" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            <svg class="progress-ring" viewBox="0 0 100 100">
+                <circle class="bg" cx="50" cy="50" r="40"/>
+                <circle class="fill" cx="50" cy="50" r="40" id="progressLeft"/>
+            </svg>
+        </div>
+        <div class="nav-indicator right" id="navRight">
+            <svg class="arrow-icon" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            <svg class="progress-ring" viewBox="0 0 100 100">
+                <circle class="bg" cx="50" cy="50" r="40"/>
+                <circle class="fill" cx="50" cy="50" r="40" id="progressRight"/>
             </svg>
         </div>
         
-        <div class="photo-container">
-            <div class="photo-display" id="photoDisplay">
-                <!-- 照片将通过JavaScript动态生成 -->
-            </div>
-        </div>
-        
-        <div class="navigation">
-            <button class="nav-button" id="prevButton" onclick="previousPhoto()">
-                <svg viewBox="0 0 24 24">
-                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                </svg>
-            </button>
-            <button class="nav-button" id="nextButton" onclick="nextPhoto()">
-                <svg viewBox="0 0 24 24">
-                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                </svg>
-            </button>
+        <!-- 交互区域指示器 -->
+        <div class="interaction-zone active" id="interactionZone">
+            <span class="zone-label">交互控制区域 (1.5m × 1.5m)</span>
         </div>
     </div>
+    
+    <!-- 底部统一工具栏 -->
+    <div class="info-bar" id="infoBar">
+        <div class="home-icon" id="homeBtn" data-action="home">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        </div>
+        <button class="toolbar-nav-btn" id="toolbarPrevBtn" data-action="prev">
+            <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <!-- 由 JS 动态填充 dot 和 counter -->
+        <button class="toolbar-nav-btn" id="toolbarNextBtn" data-action="next">
+            <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+    </div>
+</div>
 
-    <script>
-        const photos = [
-            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2070&q=80',
-            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=2074&q=80',
-            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2071&q=80',
-            'https://images.unsplash.com/photo-1418065460487-3956ef138977?auto=format&fit=crop&w=2070&q=80',
-            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=2070&q=80'
+<!-- 全屏查看器 -->
+<div class="fullscreen-viewer" id="fullscreenViewer">
+    <button class="close-fs" id="closeFs">&times;</button>
+    <div id="fsContent"></div>
+</div>
+
+<!-- 教程/屏保界面 -->
+<div class="tutorial-screen" id="tutorialScreen">
+    <h2>使用教程</h2>
+    <div class="gesture-grid">
+        <div class="gesture-item">
+            <div class="gesture-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M7 11l5-5 5 5M7 17l5-5 5 5"/>
+                </svg>
+            </div>
+            <span class="gesture-label">左右移动</span>
+            <span class="gesture-desc">将手移动到左侧或右侧区域即可切换照片</span>
+        </div>
+        <div class="gesture-item">
+            <div class="gesture-icon">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v8M8 12h8"/>
+                </svg>
+            </div>
+            <span class="gesture-label">悬停选中</span>
+            <span class="gesture-desc">悬停在按钮上片刻即可自动点击，无需精准敲击</span>
+        </div>
+        <div class="gesture-item">
+            <div class="gesture-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 12h18M3 12l4-4M3 12l4 4"/>
+                </svg>
+            </div>
+            <span class="gesture-label">返回主页</span>
+            <span class="gesture-desc">点击左上角主页图标返回开始界面</span>
+        </div>
+    </div>
+    <div class="resume-hint">移动鼠标或做出手势以继续探索</div>
+</div>
+
+<script>
+// ===================== 状态管理 =====================
+let mediaList = [];
+let currentIndex = 0;
+let isBrowseMode = false;
+let idleTimer = null;
+let idleProgress = 0;
+const IDLE_TIMEOUT = 25000; // 25秒无操作后显示教程
+const IDLE_CHECK_INTERVAL = 100;
+let dwellTimers = {};
+const DWELL_TIME = 1500; // 悬停1.5秒触发
+const PROGRESS_CIRCUMFERENCE = 2 * Math.PI * 40; // r=40
+
+const slotClasses = ['pos-far-left', 'pos-left', 'pos-main', 'pos-right', 'pos-far-right'];
+const slotIds = ['slot0', 'slot1', 'slot2', 'slot3', 'slot4'];
+
+// ===================== 初始化 =====================
+function init() {
+    loadMediaFromStorage();
+    initParticles();
+    startIdleTimer();
+    setupEventListeners();
+    updateInfoBar();
+    
+    // TouchFree 集成
+    if (typeof TouchFree !== 'undefined') {
+        initTouchFree();
+    }
+}
+
+// ===================== TouchFree 集成 =====================
+function initTouchFree() {
+    TouchFree.InputActionManager.rawInputActionEvent.push((input) => {
+        const cursor = input.CursorPosition;
+        if (cursor) {
+            const x = cursor[0] * window.innerWidth;
+            const y = (1 - cursor[1]) * window.innerHeight;
+            updateCursorPosition(x, y);
+            handleTouchFreeInput(x, y, input.ProgressToClick);
+        }
+    });
+}
+
+function updateCursorPosition(x, y) {
+    const dot = document.getElementById('cursorDot');
+    const ring = document.getElementById('cursorRing');
+    dot.style.left = (x - 10) + 'px';
+    dot.style.top = (y - 10) + 'px';
+    ring.style.left = (x - 20) + 'px';
+    ring.style.top = (y - 20) + 'px';
+    dot.classList.add('active');
+    ring.classList.add('active');
+}
+
+function handleTouchFreeInput(x, y, progress) {
+    resetIdleTimer();
+    
+    const element = document.elementFromPoint(x, y);
+    if (!element) return;
+    
+    if (progress > 0.9) {
+        element.click();
+    }
+    
+    if (element.classList.contains('hover-zone')) {
+        const action = element.dataset.action;
+        if (action === 'prev') startDwell('left', previousPhoto);
+        if (action === 'next') startDwell('right', nextPhoto);
+    } else {
+        stopDwell('left');
+        stopDwell('right');
+    }
+}
+
+// ===================== 粒子系统 =====================
+let particles = [];
+let particleCanvas, particleCtx;
+let animationId;
+
+function initParticles() {
+    particleCanvas = document.getElementById('particleCanvas');
+    particleCtx = particleCanvas.getContext('2d');
+    resizeCanvas();
+    createParticles();
+    animateParticles();
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        createParticles();
+    });
+}
+
+function resizeCanvas() {
+    particleCanvas.width = window.innerWidth;
+    particleCanvas.height = window.innerHeight;
+}
+
+function createParticles() {
+    particles = [];
+    const count = Math.floor((particleCanvas.width * particleCanvas.height) / 8000);
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: Math.random() * particleCanvas.width,
+            y: Math.random() * particleCanvas.height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5,
+            size: Math.random() * 2 + 0.5,
+            color: getRandomColor(),
+            alpha: Math.random() * 0.5 + 0.2,
+            phase: Math.random() * Math.PI * 2,
+            speed: Math.random() * 0.01 + 0.005
+        });
+    }
+}
+
+function getRandomColor() {
+    const colors = [
+        [167, 139, 250], [96, 165, 250], [52, 211, 153],
+        [244, 114, 182], [129, 140, 248], [251, 146, 60]
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function animateParticles() {
+    particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+    const time = Date.now() * 0.001;
+    
+    // 绘制连接线
+    for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 150) {
+                const alpha = (1 - dist / 150) * 0.15;
+                particleCtx.beginPath();
+                particleCtx.moveTo(particles[i].x, particles[i].y);
+                particleCtx.lineTo(particles[j].x, particles[j].y);
+                particleCtx.strokeStyle = `rgba(${particles[i].color[0]}, ${particles[i].color[1]}, ${particles[i].color[2]}, ${alpha})`;
+                particleCtx.lineWidth = 0.5;
+                particleCtx.stroke();
+            }
+        }
+    }
+    
+    // 更新和绘制粒子
+    for (let p of particles) {
+        p.phase += p.speed;
+        p.x += p.vx + Math.sin(p.phase) * 0.3;
+        p.y += p.vy + Math.cos(p.phase * 0.7) * 0.2;
+        
+        if (p.x < 0) p.x = particleCanvas.width;
+        if (p.x > particleCanvas.width) p.x = 0;
+        if (p.y < 0) p.y = particleCanvas.height;
+        if (p.y > particleCanvas.height) p.y = 0;
+        
+        const glowSize = p.size * 4;
+        const gradient = particleCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowSize);
+        gradient.addColorStop(0, `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.alpha})`);
+        gradient.addColorStop(0.5, `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.alpha * 0.3})`);
+        gradient.addColorStop(1, `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, 0)`);
+        
+        particleCtx.beginPath();
+        particleCtx.arc(p.x, p.y, glowSize, 0, Math.PI * 2);
+        particleCtx.fillStyle = gradient;
+        particleCtx.fill();
+        
+        particleCtx.beginPath();
+        particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        particleCtx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.alpha + 0.3})`;
+        particleCtx.fill();
+    }
+    
+    drawFlowWaves(time);
+    animationId = requestAnimationFrame(animateParticles);
+}
+
+function drawFlowWaves(time) {
+    for (let w = 0; w < 3; w++) {
+        particleCtx.beginPath();
+        const colors = [
+            [167, 139, 250, 0.08],
+            [96, 165, 250, 0.06],
+            [52, 211, 153, 0.05]
         ];
+        const color = colors[w];
         
-        let currentPhotoIndex = 1; // 从第二张照片开始
-        const totalPhotos = photos.length;
-        
-        // 显示浏览界面
-        function showBrowseScreen() {
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('browseScreen').style.display = 'block';
-            updatePhotoDisplay();
+        for (let x = 0; x < particleCanvas.width; x += 5) {
+            const y = particleCanvas.height * 0.5 + 
+                     Math.sin(x * 0.003 + time * 0.5 + w * 2) * 100 +
+                     Math.sin(x * 0.007 + time * 0.3 + w) * 50;
+            if (x === 0) particleCtx.moveTo(x, y);
+            else particleCtx.lineTo(x, y);
         }
         
-        // 显示开始界面
-        function showStartScreen() {
-            document.getElementById('startScreen').style.display = 'flex';
-            document.getElementById('browseScreen').style.display = 'none';
+        particleCtx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
+        particleCtx.lineWidth = 2;
+        particleCtx.stroke();
+    }
+}
+
+// ===================== 媒体存储 =====================
+function loadMediaFromStorage() {
+    try {
+        const stored = localStorage.getItem('leapAlbumMedia');
+        if (stored) {
+            mediaList = JSON.parse(stored);
+        } else {
+            mediaList = [
+                { type: 'image', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2070&q=80' },
+                { type: 'image', url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=2074&q=80' },
+                { type: 'image', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2071&q=80' },
+                { type: 'image', url: 'https://images.unsplash.com/photo-1418065460487-3956ef138977?auto=format&fit=crop&w=2070&q=80' },
+                { type: 'image', url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=2070&q=80' }
+            ];
         }
+    } catch (e) {
+        mediaList = [];
+    }
+}
+
+function saveMediaToStorage() {
+    try {
+        localStorage.setItem('leapAlbumMedia', JSON.stringify(mediaList));
+    } catch (e) {
+        console.warn('Storage full');
+    }
+}
+
+// ===================== 上传功能 =====================
+function setupUpload() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+}
+
+function handleFiles(files) {
+    const grid = document.getElementById('mediaPreviewGrid');
+    
+    Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) return;
         
-                // 更新照片显示
-        function updatePhotoDisplay(direction = 0) {
-            const photoDisplay = document.getElementById('photoDisplay');
-            photoDisplay.innerHTML = '';
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const media = {
+                type: file.type.startsWith('video/') ? 'video' : 'image',
+                url: e.target.result,
+                name: file.name
+            };
+            mediaList.push(media);
+            saveMediaToStorage();
+            addPreviewItem(media, grid, mediaList.length - 1);
+            updateInfoBar();
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
-            const prevIndex = (currentPhotoIndex - 1 + totalPhotos) % totalPhotos;
-            const nextIndex = (currentPhotoIndex + 1) % totalPhotos;
-
-            // 左侧照片
-            const leftPhoto = document.createElement('div');
-            leftPhoto.className = 'photo side-photo left';
-            leftPhoto.style.backgroundImage = `url('${photos[prevIndex]}')`;
-            leftPhoto.style.transform = direction === -1 ? 'translateX(0)' : 'translateX(-50%)';
-            photoDisplay.appendChild(leftPhoto);
-            // 点击左侧照片切换
-            leftPhoto.addEventListener('click', previousPhoto);
-
-            // 主照片
-            const mainPhoto = document.createElement('div');
-            mainPhoto.className = 'photo main-photo';
-            mainPhoto.style.backgroundImage = `url('${photos[currentPhotoIndex]}')`;
-            mainPhoto.style.transform = 'translateX(0)';
-            photoDisplay.appendChild(mainPhoto);
-
-            // 右侧照片
-            const rightPhoto = document.createElement('div');
-            rightPhoto.className = 'photo side-photo right';
-            rightPhoto.style.backgroundImage = `url('${photos[nextIndex]}')`;
-            rightPhoto.style.transform = direction === 1 ? 'translateX(0)' : 'translateX(50%)';
-            photoDisplay.appendChild(rightPhoto);
-            // 点击右侧照片切换
-            rightPhoto.addEventListener('click', nextPhoto);
-
-            // 鼠标悬停自动切换
-            let leftTimer, rightTimer;
-            leftPhoto.addEventListener('mouseenter', () => { leftTimer = setTimeout(previousPhoto, 3500); });
-            leftPhoto.addEventListener('mouseleave', () => { clearTimeout(leftTimer); });
-            rightPhoto.addEventListener('mouseenter', () => { rightTimer = setTimeout(nextPhoto, 3500); });
-            rightPhoto.addEventListener('mouseleave', () => { clearTimeout(rightTimer); });
-
-            // 动画
-            requestAnimationFrame(() => {
-                if (direction === 1) { mainPhoto.style.transform = 'translateX(-100%)'; rightPhoto.style.transform = 'translateX(0)'; }
-                if (direction === -1) { mainPhoto.style.transform = 'translateX(100%)'; leftPhoto.style.transform = 'translateX(0)'; }
-            });
-
-            // 按钮状态
-            document.getElementById('prevButton').disabled = currentPhotoIndex === 0;
-            document.getElementById('nextButton').disabled = currentPhotoIndex === totalPhotos - 1;
-        }
-
-        
-        // 上一张照片
-        function previousPhoto() {
-            if (currentPhotoIndex > 0) {
-                currentPhotoIndex--;
-                updatePhotoDisplay();
-            }
-        }
-        
-        // 下一张照片
-        function nextPhoto() {
-            if (currentPhotoIndex < totalPhotos - 1) {
-                currentPhotoIndex++;
-                updatePhotoDisplay();
-            }
-        }
-        
-        // 键盘导航
-        document.addEventListener('keydown', function(e) {
-            if (document.getElementById('browseScreen').style.display === 'block') {
-                if (e.key === 'ArrowLeft') {
-                    previousPhoto();
-                } else if (e.key === 'ArrowRight') {
-                    nextPhoto();
-                } else if (e.key === 'Escape') {
-                    showStartScreen();
-                }
+function addPreviewItem(media, container, index) {
+    const item = document.createElement('div');
+    item.className = 'media-preview-item';
+    
+    if (media.type === 'video') {
+        item.innerHTML = `<video src="${media.url}" muted loop playsinline></video><div class="remove-btn" data-index="${index}">&times;</div>`;
+    } else {
+        item.innerHTML = `<img src="${media.url}" alt="${media.name || ''}"><div class="remove-btn" data-index="${index}">&times;</div>`;
+    }
+    
+    const removeBtn = item.querySelector('.remove-btn');
+    
+    const removeHandler = (e) => {
+        e.stopPropagation();
+        const idx = parseInt(removeBtn.dataset.index);
+        mediaList.splice(idx, 1);
+        saveMediaToStorage();
+        item.remove();
+        updateInfoBar();
+        if (isBrowseMode) updatePhotoDisplay();
+        // 更新剩余索引
+        const container = document.getElementById('mediaPreviewGrid');
+        const buttons = container.querySelectorAll('.remove-btn');
+        buttons.forEach((btn, i) => btn.dataset.index = i);
+    };
+    
+    removeBtn.addEventListener('click', removeHandler);
+    
+    // 悬停停留自动删除
+    let dwellTimer = null;
+    let dwellStart = 0;
+    removeBtn.addEventListener('mouseenter', () => {
+        dwellStart = Date.now();
+        removeBtn.classList.add('dwell-active');
+        dwellTimer = requestAnimationFrame(function check() {
+            const elapsed = Date.now() - dwellStart;
+            if (elapsed >= DWELL_TIME) {
+                removeHandler(new MouseEvent('click'));
+                dwellTimer = null;
+            } else {
+                dwellTimer = requestAnimationFrame(check);
             }
         });
-        
-        // 触摸滑动支持（移动设备）
-        let startX = 0;
-        let endX = 0;
-        
-        document.addEventListener('touchstart', function(e) {
-            startX = e.touches[0].clientX;
+    });
+    removeBtn.addEventListener('mouseleave', () => {
+        if (dwellTimer) { cancelAnimationFrame(dwellTimer); dwellTimer = null; }
+        removeBtn.classList.remove('dwell-active');
+    });
+    
+    container.appendChild(item);
+}
+
+// ===================== 界面切换 =====================
+function showBrowseScreen() {
+    isBrowseMode = true;
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('uploadModal').classList.remove('active');
+    document.getElementById('browseScreen').classList.add('active');
+    document.getElementById('tutorialScreen').classList.remove('active');
+    currentIndex = 0;
+    updatePhotoDisplay();
+}
+
+function showStartScreen() {
+    isBrowseMode = false;
+    document.getElementById('startScreen').style.display = 'flex';
+    document.getElementById('browseScreen').classList.remove('active');
+    document.getElementById('fullscreenViewer').classList.remove('active');
+}
+
+function showUploadModal() {
+    document.getElementById('uploadModal').classList.add('active');
+    document.getElementById('mediaPreviewGrid').innerHTML = '';
+    mediaList.forEach((media, i) => addPreviewItem(media, document.getElementById('mediaPreviewGrid'), i));
+}
+
+function hideUploadModal() {
+    document.getElementById('uploadModal').classList.remove('active');
+}
+
+function showTutorial() {
+    document.getElementById('tutorialScreen').classList.add('active');
+    document.getElementById('idleBar').style.width = '0%';
+}
+
+function hideTutorial() {
+    document.getElementById('tutorialScreen').classList.remove('active');
+    resetIdleTimer();
+}
+
+// ===================== 照片浏览 - 平滑过渡版 =====================
+function updatePhotoDisplay() {
+    const len = mediaList.length;
+    
+    if (len === 0) {
+        slotIds.forEach(id => {
+            const slot = document.getElementById(id);
+            slot.className = 'photo-slot pos-hidden';
+            slot.innerHTML = '<div style="color:rgba(255,255,255,0.5);font-size:20px;display:flex;align-items:center;justify-content:center;height:100%;">暂无照片</div>';
         });
+        return;
+    }
+    
+    // 计算每个槽位对应的媒体索引
+    const indices = [
+        (currentIndex - 2 + len) % len,
+        (currentIndex - 1 + len) % len,
+        currentIndex,
+        (currentIndex + 1) % len,
+        (currentIndex + 2) % len
+    ];
+    
+    for (let i = 0; i < 5; i++) {
+        const slot = document.getElementById(slotIds[i]);
+        const media = mediaList[indices[i]];
         
-        document.addEventListener('touchend', function(e) {
-            endX = e.changedTouches[0].clientX;
-            if (Math.abs(endX - startX) > 50) {
-                if (endX > startX) {
-                    previousPhoto();
-                } else {
-                    nextPhoto();
-                }
+        // 只有2张或更少时，隐藏远端槽位
+        let targetClass = slotClasses[i];
+        if (len <= 2 && (i === 0 || i === 4)) {
+            targetClass = 'pos-hidden';
+        }
+        if (len === 1 && (i === 0 || i === 1 || i === 3 || i === 4)) {
+            targetClass = 'pos-hidden';
+        }
+        
+        slot.className = 'photo-slot ' + targetClass;
+        
+        // 更新内容（仅当内容变化时）
+        const expectedHtml = media.type === 'video' 
+            ? `<video src="${media.url}" autoplay muted loop playsinline></video>`
+            : `<img src="${media.url}" alt="photo">`;
+        
+        if (slot.innerHTML !== expectedHtml) {
+            slot.innerHTML = expectedHtml;
+        }
+        
+        // 中央照片可点击全屏
+        if (i === 2) {
+            slot.style.cursor = 'pointer';
+            slot.onclick = () => showFullscreen(media);
+        } else {
+            slot.style.cursor = 'default';
+            slot.onclick = null;
+        }
+    }
+    
+    updateInfoBar();
+}
+
+function showFullscreen(media) {
+    const viewer = document.getElementById('fullscreenViewer');
+    const content = document.getElementById('fsContent');
+    content.innerHTML = '';
+    
+    if (media.type === 'video') {
+        const video = document.createElement('video');
+        video.src = media.url;
+        video.autoplay = true;
+        video.controls = true;
+        video.style.maxWidth = '90vw';
+        video.style.maxHeight = '90vh';
+        content.appendChild(video);
+    } else {
+        const img = document.createElement('img');
+        img.src = media.url;
+        content.appendChild(img);
+    }
+    
+    viewer.classList.add('active');
+}
+
+function hideFullscreen() {
+    document.getElementById('fullscreenViewer').classList.remove('active');
+    document.getElementById('fsContent').innerHTML = '';
+}
+
+function previousPhoto() {
+    if (mediaList.length <= 1) return;
+    currentIndex = (currentIndex - 1 + mediaList.length) % mediaList.length;
+    updatePhotoDisplay();
+    resetIdleTimer();
+}
+
+function nextPhoto() {
+    if (mediaList.length <= 1) return;
+    currentIndex = (currentIndex + 1) % mediaList.length;
+    updatePhotoDisplay();
+    resetIdleTimer();
+}
+
+function updateInfoBar() {
+    const bar = document.getElementById('infoBar');
+    if (!bar) return;
+    
+    // 保留 homeBtn, toolbarPrevBtn, toolbarNextBtn
+    const homeBtn = bar.querySelector('#homeBtn');
+    const prevBtn = bar.querySelector('#toolbarPrevBtn');
+    const nextBtn = bar.querySelector('#toolbarNextBtn');
+    
+    // 清除中间的动态元素（dot 和 counter）
+    const dynamicEls = bar.querySelectorAll('.dot, .counter');
+    dynamicEls.forEach(el => el.remove());
+    
+    // 插入点指示器
+    if (mediaList.length > 0) {
+        const dotsContainer = document.createDocumentFragment();
+        for (let i = 0; i < mediaList.length; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === currentIndex ? ' active' : '');
+            dotsContainer.appendChild(dot);
+        }
+        // 插入到 prevBtn 和 nextBtn 之间
+        if (prevBtn && prevBtn.nextSibling) {
+            bar.insertBefore(dotsContainer, prevBtn.nextSibling);
+        }
+    }
+    
+    // 插入计数器
+    if (mediaList.length > 0) {
+        const counter = document.createElement('span');
+        counter.className = 'counter';
+        counter.textContent = `${currentIndex + 1} / ${mediaList.length}`;
+        if (nextBtn) {
+            bar.insertBefore(counter, nextBtn);
+        }
+    }
+}
+
+// ===================== 悬停停留交互 =====================
+function startDwell(side, callback) {
+    if (dwellTimers[side]) return;
+    
+    const startTime = Date.now();
+    const indicator = document.getElementById(side === 'left' ? 'navLeft' : 'navRight');
+    const progressCircle = document.getElementById(side === 'left' ? 'progressLeft' : 'progressRight');
+    const ring = document.getElementById('cursorRing');
+    
+    if (indicator) indicator.style.transform = 'translateY(-50%) scale(1.2)';
+    if (ring) ring.classList.add('dwell-active');
+    
+    function update() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / DWELL_TIME, 1);
+        
+        const offset = PROGRESS_CIRCUMFERENCE * (1 - progress);
+        if (progressCircle) progressCircle.style.strokeDashoffset = offset;
+        
+        if (progress >= 1) {
+            callback();
+            stopDwell(side);
+        } else {
+            dwellTimers[side] = requestAnimationFrame(update);
+        }
+    }
+    
+    dwellTimers[side] = requestAnimationFrame(update);
+}
+
+function stopDwell(side) {
+    if (dwellTimers[side]) {
+        cancelAnimationFrame(dwellTimers[side]);
+        delete dwellTimers[side];
+    }
+    
+    const indicator = document.getElementById(side === 'left' ? 'navLeft' : 'navRight');
+    const progressCircle = document.getElementById(side === 'left' ? 'progressLeft' : 'progressRight');
+    const ring = document.getElementById('cursorRing');
+    
+    if (indicator) indicator.style.transform = 'translateY(-50%) scale(1)';
+    if (progressCircle) progressCircle.style.strokeDashoffset = PROGRESS_CIRCUMFERENCE;
+    if (ring) ring.classList.remove('dwell-active');
+}
+
+// ===================== 空闲计时器 =====================
+function startIdleTimer() {
+    idleProgress = 0;
+    const bar = document.getElementById('idleBar');
+    
+    function tick() {
+        idleProgress += IDLE_CHECK_INTERVAL;
+        const pct = (idleProgress / IDLE_TIMEOUT) * 100;
+        bar.style.width = pct + '%';
+        
+        if (idleProgress >= IDLE_TIMEOUT) {
+            showTutorial();
+        } else {
+            idleTimer = setTimeout(tick, IDLE_CHECK_INTERVAL);
+        }
+    }
+    
+    idleTimer = setTimeout(tick, IDLE_CHECK_INTERVAL);
+}
+
+function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleProgress = 0;
+    document.getElementById('idleBar').style.width = '0%';
+    startIdleTimer();
+}
+
+// ===================== 事件监听 =====================
+function setupEventListeners() {
+    // 按钮悬停停留
+    setupDwellButton('exploreBtn', showBrowseScreen);
+    setupDwellButton('uploadBtn', showUploadModal);
+    setupDwellButton('homeBtn', showStartScreen);
+    setupDwellButton('closeUpload', hideUploadModal);
+    setupDwellButton('closeFs', hideFullscreen);
+    setupDwellButton('toolbarPrevBtn', previousPhoto);
+    setupDwellButton('toolbarNextBtn', nextPhoto);
+    
+    // 上传
+    setupUpload();
+    
+    // 左右悬停区域
+    const hoverLeft = document.getElementById('hoverLeft');
+    const hoverRight = document.getElementById('hoverRight');
+    
+    hoverLeft.addEventListener('mouseenter', () => {
+        if (isBrowseMode) startDwell('left', previousPhoto);
+    });
+    hoverLeft.addEventListener('mouseleave', () => stopDwell('left'));
+    
+    hoverRight.addEventListener('mouseenter', () => {
+        if (isBrowseMode) startDwell('right', nextPhoto);
+    });
+    hoverRight.addEventListener('mouseleave', () => stopDwell('right'));
+    
+    // 键盘
+    document.addEventListener('keydown', (e) => {
+        resetIdleTimer();
+        if (!isBrowseMode) return;
+        if (e.key === 'ArrowLeft') previousPhoto();
+        if (e.key === 'ArrowRight') nextPhoto();
+        if (e.key === 'Escape') {
+            if (document.getElementById('fullscreenViewer').classList.contains('active')) {
+                hideFullscreen();
+            } else {
+                showStartScreen();
+            }
+        }
+    });
+    
+    // 触摸
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+        const diff = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) previousPhoto();
+            else nextPhoto();
+        }
+    }, { passive: true });
+    
+    // 鼠标移动重置计时器
+    document.addEventListener('mousemove', () => {
+        resetIdleTimer();
+        if (document.getElementById('tutorialScreen').classList.contains('active')) {
+            hideTutorial();
+        }
+    });
+    
+    document.addEventListener('click', resetIdleTimer);
+    
+    // 教程界面交互
+    document.getElementById('tutorialScreen').addEventListener('mousemove', hideTutorial);
+    document.getElementById('tutorialScreen').addEventListener('click', hideTutorial);
+    
+    // 窗口调整
+    window.addEventListener('resize', () => {
+        if (isBrowseMode) updatePhotoDisplay();
+    });
+}
+
+function setupDwellButton(id, callback) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    
+    let timer = null;
+    let startTime = 0;
+    
+    btn.addEventListener('mouseenter', () => {
+        startTime = Date.now();
+        timer = requestAnimationFrame(function update() {
+            const elapsed = Date.now() - startTime;
+            if (elapsed >= DWELL_TIME) {
+                callback();
+                timer = null;
+            } else {
+                timer = requestAnimationFrame(update);
             }
         });
-        
-        // 窗口调整大小时重新计算位置
-        window.addEventListener('resize', function() {
-            updatePhotoDisplay();
-        });
-        
-        // 初始化
-        updatePhotoDisplay();
-    </script>
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+        if (timer) {
+            cancelAnimationFrame(timer);
+            timer = null;
+        }
+    });
+    
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        callback();
+    });
+}
+
+// 启动
+init();
+</script>
 </body>
 </html>
