@@ -517,13 +517,19 @@ function addPreviewItem(media, container) {
 
     removeBtn.addEventListener('click', removeHandler);
 
-    // 悬停停留自动删除
+    // 悬停停留自动删除（同样带液体填充倒计时）
+    const removeFill = document.createElement('span');
+    removeFill.className = 'dwell-fill';
+    removeBtn.appendChild(removeFill);
+
     let dwellTimer = null;
     removeBtn.addEventListener('mouseenter', () => {
         const dwellStart = Date.now();
         removeBtn.classList.add('dwell-active');
         dwellTimer = setInterval(() => {
-            if (Date.now() - dwellStart >= DWELL_TIME) {
+            const progress = Math.min((Date.now() - dwellStart) / DWELL_TIME, 1);
+            removeFill.style.width = (progress * 100) + '%';
+            if (progress >= 1) {
                 clearInterval(dwellTimer);
                 dwellTimer = null;
                 removeHandler();
@@ -532,6 +538,7 @@ function addPreviewItem(media, container) {
     });
     removeBtn.addEventListener('mouseleave', () => {
         if (dwellTimer) { clearInterval(dwellTimer); dwellTimer = null; }
+        removeFill.style.width = '0%';
         removeBtn.classList.remove('dwell-active');
     });
 
@@ -849,14 +856,26 @@ function setupDwellButton(id, callback, opts = {}) {
     const btn = document.getElementById(id);
     if (!btn) return;
 
+    // 倒计时可视化：按钮内的液体填充层，涨满即触发
+    const fill = document.createElement('span');
+    fill.className = 'dwell-fill';
+    btn.appendChild(fill);
+
     let timer = null;
+
+    function resetFill() {
+        fill.style.width = '0%';
+    }
 
     function run(duration) {
         const startTime = Date.now();
         timer = setInterval(() => {
-            if (Date.now() - startTime >= duration) {
+            const progress = Math.min((Date.now() - startTime) / duration, 1);
+            fill.style.width = (progress * 100) + '%';
+            if (progress >= 1) {
                 clearInterval(timer);
                 timer = null;
+                resetFill();
                 callback();
                 if (opts.repeat) run(DWELL_REPEAT_TIME); // 保持悬停 → 连续触发
             }
@@ -870,10 +889,16 @@ function setupDwellButton(id, callback, opts = {}) {
             clearInterval(timer);
             timer = null;
         }
+        resetFill();
     });
 
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+        resetFill();
         callback();
     });
 }

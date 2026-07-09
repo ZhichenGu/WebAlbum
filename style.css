@@ -20,6 +20,34 @@ body {
     user-select: none;
 }
 
+/* ===== 悬停倒计时液体填充（所有 dwell 按钮通用） ===== */
+.dwell-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg,
+        hsl(var(--h) 80% 62% / 0.22),
+        hsl(var(--h) 80% 62% / 0.38));
+    border-radius: inherit;
+    pointer-events: none;
+    transition: width 0.08s linear;
+    z-index: 0;
+}
+
+body.light .dwell-fill {
+    background: linear-gradient(90deg,
+        hsl(var(--h) 75% 48% / 0.18),
+        hsl(var(--h) 75% 48% / 0.32));
+}
+
+/* 液体填充需要按钮裁剪溢出 */
+.home-icon, .toolbar-nav-btn, .mode-toggle,
+.upload-modal .close-btn, .fullscreen-viewer .close-fs,
+.media-preview-item .remove-btn {
+    position: relative;
+    overflow: hidden;
+}
+
 /* ===== 液态玻璃通用面板 ===== */
 .glass {
     background: var(--glass-bg);
