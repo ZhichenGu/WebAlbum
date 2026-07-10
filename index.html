@@ -33,6 +33,107 @@
         <button class="upload-button" id="uploadBtn" data-action="upload">
             <span>上传内容</span>
         </button>
+        <button class="upload-button" id="cameraBtn" data-action="camera">
+            <span>摄像头设置</span>
+        </button>
+    </div>
+</div>
+
+<!-- 控制点 P：摄像头手势光标 -->
+<div class="hand-cursor" id="handCursor"></div>
+
+<!-- 摄像头手势控制设置面板 -->
+<div class="camera-modal" id="cameraModal">
+    <div class="camera-panel">
+        <div class="camera-panel-header">
+            <h2>摄像头手势控制</h2>
+            <button class="close-btn" id="closeCamera">&times;</button>
+        </div>
+
+        <div class="camera-columns">
+            <div class="camera-preview-wrap">
+                <canvas id="cameraPreview" width="340" height="255"></canvas>
+                <p class="camera-status" id="cameraStatus">未启动</p>
+            </div>
+
+            <div class="camera-controls">
+                <div class="ctrl-row">
+                    <label>控制点 P（手势光标）</label>
+                    <label class="switch">
+                        <input type="checkbox" id="handEnabled" checked>
+                        <span class="track"></span>
+                    </label>
+                </div>
+
+                <div class="ctrl-row">
+                    <label>摄像头</label>
+                    <select id="cameraSelect"></select>
+                </div>
+
+                <div class="ctrl-row">
+                    <label>识别手数</label>
+                    <select id="maxHandsSelect">
+                        <option value="1" selected>1 只（推荐，最稳定）</option>
+                        <option value="2">2 只（P 跟随第一只手）</option>
+                    </select>
+                </div>
+
+                <p class="ctrl-group-title">画面调平与映射</p>
+
+                <div class="ctrl-row">
+                    <label>画面调平（旋转）</label>
+                    <input type="range" class="mini-slider" id="rotSlider" min="-45" max="45" step="1" value="0">
+                    <span class="ctrl-val" id="rotVal">0°</span>
+                </div>
+
+                <div class="ctrl-row">
+                    <label>左右镜像</label>
+                    <label class="switch">
+                        <input type="checkbox" id="flipXChk" checked>
+                        <span class="track"></span>
+                    </label>
+                </div>
+
+                <div class="ctrl-row">
+                    <label>上下翻转</label>
+                    <label class="switch">
+                        <input type="checkbox" id="flipYChk">
+                        <span class="track"></span>
+                    </label>
+                </div>
+
+                <p class="ctrl-group-title">有效区域（手活动范围 → 全屏）</p>
+
+                <div class="region-grid">
+                    <div class="ctrl-row">
+                        <label>左</label>
+                        <input type="range" class="mini-slider" id="regionLeft" min="0" max="45" step="1" value="10">
+                        <span class="ctrl-val" id="regionLeftVal">10%</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <label>右</label>
+                        <input type="range" class="mini-slider" id="regionRight" min="55" max="100" step="1" value="90">
+                        <span class="ctrl-val" id="regionRightVal">90%</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <label>上</label>
+                        <input type="range" class="mini-slider" id="regionTop" min="0" max="45" step="1" value="10">
+                        <span class="ctrl-val" id="regionTopVal">10%</span>
+                    </div>
+                    <div class="ctrl-row">
+                        <label>下</label>
+                        <input type="range" class="mini-slider" id="regionBottom" min="55" max="100" step="1" value="90">
+                        <span class="ctrl-val" id="regionBottomVal">90%</span>
+                    </div>
+                </div>
+
+                <div class="ctrl-row">
+                    <label>跟手速度</label>
+                    <input type="range" class="mini-slider" id="smoothSlider" min="5" max="50" step="1" value="25">
+                    <span class="ctrl-val" id="smoothVal">25</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

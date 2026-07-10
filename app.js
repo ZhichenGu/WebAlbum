@@ -133,6 +133,441 @@ function init() {
     startIdleTimer();
     setupEventListeners();
     initTutorialParticles();
+    initHandControl();
+}
+
+// ===================== 摄像头手势控制（控制点 P） =====================
+// 取手腕 + 五指尖共 6 个关键点的质心作为控制点 P；
+// P 通过派发真实的 mouseenter/mouseleave 事件驱动页面上所有既有的
+// 1.8 秒悬停确认逻辑，因此拥有和鼠标完全一样的交互能力。
+const HAND_KEYPOINT_IDS = [0, 4, 8, 12, 16, 20]; // wrist + 5 fingertips
+
+let handSettings = {
+    enabled: true,
+    deviceId: '',
+    maxHands: 1,
+    flipX: true,      // 摄像头对着人时通常需要镜像
+    flipY: false,
+    rotation: 0,      // 画面调平角度（度）
+    region: { left: 10, right: 90, top: 10, bottom: 90 }, // 有效区域（%）
+    smooth: 25        // 跟手速度（5-50，对应平滑系数 0.05-0.5）
+};
+
+let handPoseModel = null;
+let handVideo = null;
+let handStream = null;
+let handRunning = false;
+let handStarting = false;
+let latestHands = [];
+let pX = window.innerWidth / 2, pY = window.innerHeight / 2;
+let pTargetX = pX, pTargetY = pY;
+let handLastSeen = 0;
+let handMoveLoop = null;
+let hoverChain = [];
+let previewLoop = null;
+
+function loadHandSettings() {
+    try {
+        const s = JSON.parse(localStorage.getItem('handSettings'));
+        if (s) handSettings = Object.assign(handSettings, s);
+    } catch (e) {}
+}
+
+function saveHandSettings() {
+    try { localStorage.setItem('handSettings', JSON.stringify(handSettings)); } catch (e) {}
+}
+
+function setCameraStatus(text) {
+    const el = document.getElementById('cameraStatus');
+    if (el) el.textContent = text;
+}
+
+// ml5 主库：优先本地文件，失败（文件缺失等）再回退 CDN
+function loadMl5() {
+    return new Promise((resolve, reject) => {
+        if (window.ml5) return resolve();
+        const local = document.createElement('script');
+        local.src = 'ml5.min.js';
+        local.onload = () => resolve();
+        local.onerror = () => {
+            const cdn = document.createElement('script');
+            cdn.src = 'https://unpkg.com/ml5@1/dist/ml5.min.js';
+            cdn.onload = () => resolve();
+            cdn.onerror = () => reject(new Error('ml5 库加载失败（本地文件缺失且无网络）'));
+            document.head.appendChild(cdn);
+        };
+        document.head.appendChild(local);
+    });
+}
+
+// 手势模型：优先本地 mediapipe-hands 文件夹，超时/失败再回退 CDN。
+// 注意：模型权重（wasm/tflite）不在 ml5.min.js 里，是单独加载的，
+// 所以离线部署必须保留项目里的 mediapipe-hands 文件夹。
+function createHandPoseModel(solutionPath, timeoutMs) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('模型初始化超时')), timeoutMs);
+        try {
+            const model = ml5.handPose(
+                { maxHands: handSettings.maxHands, flipped: false, runtime: 'mediapipe', solutionPath },
+                () => { clearTimeout(timer); resolve(model); }
+            );
+        } catch (e) {
+            clearTimeout(timer);
+            reject(e);
+        }
+    });
+}
+
+// 摄像头坐标(归一化) → 屏幕坐标：旋转调平 → 镜像 → 有效区域映射 → 全屏
+function mapHandToScreen(nx, ny) {
+    // 1. 画面调平：绕画面中心旋转
+    const rad = handSettings.rotation * Math.PI / 180;
+    if (rad !== 0) {
+        const dx = nx - 0.5, dy = ny - 0.5;
+        nx = 0.5 + dx * Math.cos(rad) - dy * Math.sin(rad);
+        ny = 0.5 + dx * Math.sin(rad) + dy * Math.cos(rad);
+    }
+    // 2. 镜像
+    if (handSettings.flipX) nx = 1 - nx;
+    if (handSettings.flipY) ny = 1 - ny;
+    // 3. 有效区域 → 0..1
+    const r = handSettings.region;
+    let rx = (nx * 100 - r.left) / Math.max(r.right - r.left, 1);
+    let ry = (ny * 100 - r.top) / Math.max(r.bottom - r.top, 1);
+    // 4. 钳制在画布内
+    rx = Math.max(0, Math.min(1, rx));
+    ry = Math.max(0, Math.min(1, ry));
+    return { x: rx * window.innerWidth, y: ry * window.innerHeight, nx, ny };
+}
+
+function onHandResults(results) {
+    latestHands = results || [];
+    if (!latestHands.length || !handVideo) return;
+
+    const hand = latestHands[0]; // 多只手时 P 跟随第一只
+    const kps = hand.keypoints;
+    let cx = 0, cy = 0, n = 0;
+    for (const id of HAND_KEYPOINT_IDS) {
+        if (kps[id]) { cx += kps[id].x; cy += kps[id].y; n++; }
+    }
+    if (n === 0) return;
+    cx /= n; cy /= n;
+
+    const vw = handVideo.videoWidth || 640;
+    const vh = handVideo.videoHeight || 480;
+    const mapped = mapHandToScreen(cx / vw, cy / vh);
+    pTargetX = mapped.x;
+    pTargetY = mapped.y;
+    handLastSeen = Date.now();
+}
+
+// 平滑移动循环：EMA 平滑 + 单帧最大步长限制（避免移动过猛）
+function startHandMoveLoop() {
+    stopHandMoveLoop();
+    handMoveLoop = setInterval(() => {
+        const cursor = document.getElementById('handCursor');
+        const seen = Date.now() - handLastSeen < 600; // 600ms 内检测到过手
+
+        if (!seen) {
+            cursor.classList.remove('active');
+            clearHoverChain();
+            return;
+        }
+        cursor.classList.add('active');
+
+        const k = handSettings.smooth / 100; // 0.05 - 0.5
+        let dx = (pTargetX - pX) * k;
+        let dy = (pTargetY - pY) * k;
+        const MAX_STEP = 55; // 单帧最大移动像素
+        const step = Math.hypot(dx, dy);
+        if (step > MAX_STEP) { dx = dx / step * MAX_STEP; dy = dy / step * MAX_STEP; }
+
+        const moved = Math.hypot(dx, dy);
+        pX = Math.max(0, Math.min(window.innerWidth, pX + dx));
+        pY = Math.max(0, Math.min(window.innerHeight, pY + dy));
+
+        cursor.style.left = pX + 'px';
+        cursor.style.top = pY + 'px';
+
+        // 有明显移动 → 重置空闲计时 / 唤醒屏保
+        if (moved > 2.5) {
+            if (document.getElementById('tutorialScreen').classList.contains('active')) {
+                hideTutorial();
+            } else {
+                resetIdleTimer();
+            }
+        }
+
+        updateHoverChain(pX, pY);
+    }, 25);
+}
+
+function stopHandMoveLoop() {
+    if (handMoveLoop) { clearInterval(handMoveLoop); handMoveLoop = null; }
+    const cursor = document.getElementById('handCursor');
+    if (cursor) cursor.classList.remove('active');
+    clearHoverChain();
+}
+
+// 模拟浏览器的 mouseenter/mouseleave 行为（含祖先链），驱动既有 dwell 逻辑
+function getAncestorChain(el) {
+    const arr = [];
+    while (el && el !== document.documentElement && el !== document.body) {
+        arr.push(el);
+        el = el.parentElement;
+    }
+    return arr;
+}
+
+function updateHoverChain(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const newChain = el ? getAncestorChain(el) : [];
+    for (const e of hoverChain) {
+        if (!newChain.includes(e)) e.dispatchEvent(new MouseEvent('mouseleave'));
+    }
+    for (const e of newChain) {
+        if (!hoverChain.includes(e)) e.dispatchEvent(new MouseEvent('mouseenter'));
+    }
+    hoverChain = newChain;
+}
+
+function clearHoverChain() {
+    for (const e of hoverChain) e.dispatchEvent(new MouseEvent('mouseleave'));
+    hoverChain = [];
+}
+
+async function startHandControl() {
+    if (handRunning || handStarting) return;
+    handStarting = true;
+    try {
+        setCameraStatus('正在加载手势识别模型…');
+        await loadMl5();
+
+        setCameraStatus('正在打开摄像头…');
+        const constraints = {
+            video: handSettings.deviceId
+                ? { deviceId: { exact: handSettings.deviceId }, width: 640, height: 480 }
+                : { width: 640, height: 480 },
+            audio: false
+        };
+        handStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        handVideo = document.createElement('video');
+        handVideo.srcObject = handStream;
+        handVideo.muted = true;
+        handVideo.playsInline = true;
+        await handVideo.play();
+
+        await refreshCameraList();
+
+        setCameraStatus('正在初始化模型…');
+        try {
+            handPoseModel = await createHandPoseModel('mediapipe-hands', 25000);
+        } catch (e) {
+            setCameraStatus('本地模型加载失败，尝试在线模型…');
+            handPoseModel = await createHandPoseModel('https://cdn.jsdelivr.net/npm/@mediapipe/hands', 30000);
+        }
+
+        handPoseModel.detectStart(handVideo, onHandResults);
+        handRunning = true;
+        startHandMoveLoop();
+        setCameraStatus('运行中：将手伸入画面即可控制 P');
+    } catch (err) {
+        setCameraStatus('启动失败：' + (err && err.message ? err.message : err));
+        stopHandControl(false);
+    } finally {
+        handStarting = false;
+    }
+}
+
+function stopHandControl(updateStatus = true) {
+    if (handPoseModel && handPoseModel.detectStop) {
+        try { handPoseModel.detectStop(); } catch (e) {}
+    }
+    handPoseModel = null;
+    if (handStream) {
+        handStream.getTracks().forEach(t => t.stop());
+        handStream = null;
+    }
+    handVideo = null;
+    latestHands = [];
+    handRunning = false;
+    stopHandMoveLoop();
+    if (updateStatus) setCameraStatus('已关闭');
+}
+
+function restartHandControl() {
+    stopHandControl(false);
+    if (handSettings.enabled) startHandControl();
+}
+
+async function refreshCameraList() {
+    const select = document.getElementById('cameraSelect');
+    if (!select || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        select.innerHTML = '';
+        cams.forEach((cam, i) => {
+            const opt = document.createElement('option');
+            opt.value = cam.deviceId;
+            opt.textContent = cam.label || `摄像头 ${i + 1}`;
+            select.appendChild(opt);
+        });
+        if (handSettings.deviceId) select.value = handSettings.deviceId;
+        else if (cams.length) handSettings.deviceId = select.value;
+    } catch (e) {}
+}
+
+// 设置面板实时预览：画面（含调平/镜像变换）+ 关键点 + 有效区域框
+function startCameraPreview() {
+    stopCameraPreview();
+    const canvas = document.getElementById('cameraPreview');
+    const ctx = canvas.getContext('2d');
+    previewLoop = setInterval(() => {
+        const W = canvas.width, H = canvas.height;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, W, H);
+
+        if (handVideo && handVideo.videoWidth) {
+            // 按当前调平/镜像设置变换后绘制画面，让预览所见即所得
+            ctx.save();
+            ctx.translate(W / 2, H / 2);
+            ctx.scale(handSettings.flipX ? -1 : 1, handSettings.flipY ? -1 : 1);
+            ctx.rotate(-handSettings.rotation * Math.PI / 180);
+            ctx.drawImage(handVideo, -W / 2, -H / 2, W, H);
+            ctx.restore();
+
+            // 关键点与质心（用与 P 相同的映射管线，保证所见即所得）
+            const vw = handVideo.videoWidth, vh = handVideo.videoHeight;
+            for (const hand of latestHands) {
+                let cx = 0, cy = 0, n = 0;
+                for (const id of HAND_KEYPOINT_IDS) {
+                    const kp = hand.keypoints[id];
+                    if (!kp) continue;
+                    const m = mapHandToScreen(kp.x / vw, kp.y / vh);
+                    ctx.beginPath();
+                    ctx.arc(m.nx * W, m.ny * H, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#4ade80';
+                    ctx.fill();
+                    cx += m.nx; cy += m.ny; n++;
+                }
+                if (n) {
+                    ctx.beginPath();
+                    ctx.arc(cx / n * W, cy / n * H, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                    ctx.strokeStyle = 'hsl(330 80% 60%)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+        } else {
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.font = '13px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(handSettings.enabled ? '等待摄像头画面…' : '控制点 P 已关闭', W / 2, H / 2);
+        }
+
+        // 有效区域框
+        const r = handSettings.region;
+        ctx.strokeStyle = 'hsla(48, 95%, 60%, 0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(r.left / 100 * W, r.top / 100 * H,
+                       (r.right - r.left) / 100 * W, (r.bottom - r.top) / 100 * H);
+        ctx.setLineDash([]);
+    }, 100);
+}
+
+function stopCameraPreview() {
+    if (previewLoop) { clearInterval(previewLoop); previewLoop = null; }
+}
+
+function showCameraModal() {
+    document.getElementById('cameraModal').classList.add('active');
+    refreshCameraList();
+    startCameraPreview();
+    resetIdleTimer();
+}
+
+function hideCameraModal() {
+    document.getElementById('cameraModal').classList.remove('active');
+    stopCameraPreview();
+    resetIdleTimer();
+}
+
+function bindHandSettingUI() {
+    const $ = id => document.getElementById(id);
+
+    $('handEnabled').checked = handSettings.enabled;
+    $('handEnabled').addEventListener('change', (e) => {
+        handSettings.enabled = e.target.checked;
+        saveHandSettings();
+        if (handSettings.enabled) startHandControl();
+        else stopHandControl();
+    });
+
+    $('cameraSelect').addEventListener('change', (e) => {
+        handSettings.deviceId = e.target.value;
+        saveHandSettings();
+        restartHandControl();
+    });
+
+    $('maxHandsSelect').value = String(handSettings.maxHands);
+    $('maxHandsSelect').addEventListener('change', (e) => {
+        handSettings.maxHands = parseInt(e.target.value, 10) || 1;
+        saveHandSettings();
+        restartHandControl(); // 手数变化需要重建模型
+    });
+
+    const bindSlider = (id, valId, get, set, fmt) => {
+        const slider = $(id), val = $(valId);
+        slider.value = get();
+        val.textContent = fmt(get());
+        slider.addEventListener('input', () => {
+            set(parseFloat(slider.value));
+            val.textContent = fmt(get());
+            saveHandSettings();
+        });
+    };
+
+    bindSlider('rotSlider', 'rotVal',
+        () => handSettings.rotation, v => handSettings.rotation = v, v => v + '°');
+    bindSlider('regionLeft', 'regionLeftVal',
+        () => handSettings.region.left, v => handSettings.region.left = v, v => v + '%');
+    bindSlider('regionRight', 'regionRightVal',
+        () => handSettings.region.right, v => handSettings.region.right = v, v => v + '%');
+    bindSlider('regionTop', 'regionTopVal',
+        () => handSettings.region.top, v => handSettings.region.top = v, v => v + '%');
+    bindSlider('regionBottom', 'regionBottomVal',
+        () => handSettings.region.bottom, v => handSettings.region.bottom = v, v => v + '%');
+    bindSlider('smoothSlider', 'smoothVal',
+        () => handSettings.smooth, v => handSettings.smooth = v, v => String(v));
+
+    $('flipXChk').checked = handSettings.flipX;
+    $('flipXChk').addEventListener('change', (e) => {
+        handSettings.flipX = e.target.checked;
+        saveHandSettings();
+    });
+
+    $('flipYChk').checked = handSettings.flipY;
+    $('flipYChk').addEventListener('change', (e) => {
+        handSettings.flipY = e.target.checked;
+        saveHandSettings();
+    });
+}
+
+function initHandControl() {
+    loadHandSettings();
+    bindHandSettingUI();
+    setupDwellButton('cameraBtn', showCameraModal);
+    setupDwellButton('closeCamera', hideCameraModal);
+    if (handSettings.enabled) {
+        startHandControl(); // 默认开启
+    } else {
+        setCameraStatus('已关闭');
+    }
 }
 
 // ===================== 背景粒子系统（主页动效） =====================

@@ -816,6 +816,283 @@ body.light .empty-hint { color: rgba(0,0,0,0.4); }
     width: 0%;
 }
 
+/* ===== 控制点 P（摄像头手势光标） ===== */
+.hand-cursor {
+    position: fixed;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: hsl(var(--h) 80% 62% / 0.85);
+    border: 2px solid rgba(255,255,255,0.9);
+    box-shadow: 0 0 18px hsl(var(--h) 80% 62% / 0.6), 0 0 36px hsl(var(--h) 80% 62% / 0.3);
+    pointer-events: none;
+    z-index: 2000;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.hand-cursor.active { opacity: 1; }
+
+body.light .hand-cursor {
+    background: hsl(var(--h) 75% 50% / 0.85);
+    border-color: rgba(255,255,255,1);
+}
+
+/* ===== 摄像头设置面板 ===== */
+.camera-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    z-index: 320;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+}
+
+.camera-modal.active { display: flex; }
+
+body.light .camera-modal { background: rgba(245,245,247,0.8); }
+
+.camera-panel {
+    width: min(880px, 94vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 28px;
+    padding: 28px 32px;
+    background: rgba(20, 20, 30, 0.55);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-highlight), 0 20px 80px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+body.light .camera-panel {
+    background: rgba(255,255,255,0.65);
+    border-color: rgba(0,0,0,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 20px 80px rgba(0,0,0,0.15);
+}
+
+.camera-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.camera-panel-header h2 {
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    background: linear-gradient(90deg, hsl(var(--h) 88% 76%), hsl(calc(var(--h) - 41) 92% 68%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body.light .camera-panel-header h2 {
+    background: linear-gradient(90deg, hsl(var(--h) 75% 48%), hsl(calc(var(--h) - 41) 80% 44%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.camera-panel-header .close-btn {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-highlight);
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+body.light .camera-panel-header .close-btn {
+    background: rgba(0,0,0,0.05);
+    border-color: rgba(0,0,0,0.1);
+    color: #1d1d1f;
+}
+
+.camera-columns {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.camera-preview-wrap {
+    flex: 0 0 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#cameraPreview {
+    width: 340px;
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    background: #000;
+    display: block;
+}
+
+body.light #cameraPreview { border-color: rgba(0,0,0,0.1); }
+
+.camera-status {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 1px;
+    min-height: 18px;
+}
+
+body.light .camera-status { color: rgba(0,0,0,0.5); }
+
+.camera-controls {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ctrl-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ctrl-row > label:first-child,
+.ctrl-row .ctrl-label {
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.75);
+    white-space: nowrap;
+}
+
+body.light .ctrl-row > label:first-child,
+body.light .ctrl-row .ctrl-label { color: rgba(0,0,0,0.7); }
+
+.ctrl-row select {
+    flex: 1;
+    max-width: 260px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(0,0,0,0.3);
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+body.light .ctrl-row select {
+    background: rgba(255,255,255,0.8);
+    color: #1d1d1f;
+    border-color: rgba(0,0,0,0.12);
+}
+
+.mini-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    max-width: 220px;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    background: rgba(255,255,255,0.18);
+}
+
+body.light .mini-slider { background: rgba(0,0,0,0.12); }
+
+.mini-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: hsl(var(--h) 80% 68%);
+    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    cursor: pointer;
+}
+
+.ctrl-val {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    min-width: 42px;
+    text-align: right;
+}
+
+body.light .ctrl-val { color: rgba(0,0,0,0.45); }
+
+/* 开关样式 */
+.switch {
+    position: relative;
+    width: 52px; height: 30px;
+    flex-shrink: 0;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.switch .track {
+    position: absolute;
+    inset: 0;
+    border-radius: 15px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid var(--glass-border);
+    transition: background 0.25s ease;
+    cursor: pointer;
+}
+
+body.light .switch .track { background: rgba(0,0,0,0.15); border-color: rgba(0,0,0,0.08); }
+
+.switch .track::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    transition: transform 0.25s ease;
+}
+
+.switch input:checked + .track {
+    background: hsl(var(--h) 75% 55%);
+}
+
+.switch input:checked + .track::after {
+    transform: translateX(22px);
+}
+
+.ctrl-group-title {
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 6px;
+    text-transform: uppercase;
+}
+
+body.light .ctrl-group-title { color: rgba(0,0,0,0.35); }
+
+.region-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+}
+
+.region-grid .ctrl-row { gap: 10px; }
+.region-grid .ctrl-row > label:first-child { font-size: 13px; }
+
 /* 全屏查看器 */
 .fullscreen-viewer {
     display: none;

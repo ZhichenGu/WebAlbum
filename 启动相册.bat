@@ -40,6 +40,9 @@ start "" "%BROWSER%" ^
     --disable-infobars ^
     --disable-session-crashed-bubble ^
     --disable-pinch ^
-    --overscroll-history-navigation=0
+    --overscroll-history-navigation=0 ^
+    --use-fake-ui-for-media-stream ^
+    --autoplay-policy=no-user-gesture-required ^
+    --allow-file-access-from-files
 
 exit
