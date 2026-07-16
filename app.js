@@ -7,8 +7,8 @@ let idleProgress = 0;
 const IDLE_TIMEOUT = 90000; // 90秒无操作后进入屏保/教程
 const IDLE_CHECK_INTERVAL = 100;
 let dwellTimers = {};
-const DWELL_TIME = 1800;        // 悬停1.8秒首次触发
-const DWELL_REPEAT_TIME = 3500;  // 保持悬停时的连续翻页间隔
+const DWELL_TIME = 1000;        // 悬停1.8秒首次触发
+const DWELL_REPEAT_TIME = 2500;  // 保持悬停时的连续翻页间隔
 const PROGRESS_CIRCUMFERENCE = 2 * Math.PI * 40; // r=40
 
 const slotClasses = ['pos-far-left', 'pos-left', 'pos-main', 'pos-right', 'pos-far-right'];
